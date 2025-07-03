@@ -26,28 +26,28 @@ class Unity extends Model
      * 
      * @return void
      */
-    public function readOpenUnits()
-    {
+public function readOpenUnits()
+{
+    // Passo 1: obtém o controle mais recente
+    $query = "SELECT fk_id_controle_unidade FROM configuracao ORDER BY id_configuracao DESC LIMIT 1";
+    $stmt = $this->db->prepare($query);
+    $stmt->execute();
+    $controle = $stmt->fetchColumn();
 
-        $query = "SET @controle_unidade = (SELECT configuracao.fk_id_controle_unidade FROM configuracao)";
-        $stmt = $this->db->prepare($query);
-        $stmt->execute();
-
-        return $this->speedingUp(
-
-            "SELECT unidade.id_unidade AS option_value , unidade.unidade AS option_text
-            
-            FROM unidade 
-            
-            WHERE 
-            
-            CASE 
-            
-            WHEN @controle_unidade = 1 THEN unidade.id_unidade = 1  
-            WHEN @controle_unidade = 2 THEN unidade.id_unidade BETWEEN 1 AND 2
-            ELSE unidade.id_unidade <> 0 END;"
-        );
+    // Passo 2: monta a consulta com base no valor retornado
+    if ($controle == 1) {
+        $sql = "SELECT id_unidade AS option_value, unidade AS option_text FROM unidade WHERE id_unidade = 1";
+    } elseif ($controle == 2) {
+        $sql = "SELECT id_unidade AS option_value, unidade AS option_text FROM unidade WHERE id_unidade BETWEEN 1 AND 2";
+    } else {
+        $sql = "SELECT id_unidade AS option_value, unidade AS option_text FROM unidade WHERE id_unidade <> 0";
     }
+
+    // Passo 3: executa a consulta final
+    return $this->speedingUp($sql);
+}
+
+
 
 
     /**
